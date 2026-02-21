@@ -31,7 +31,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: "1.9.0"
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
@@ -50,7 +50,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: "1.9.0"
 
       - name: Terraform Init
         working-directory: ${{ matrix.example }}
@@ -72,7 +72,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: "1.9.0"
 
       - name: Generate test fixtures
         run: cd tests/fixtures && zip function.zip index.js
