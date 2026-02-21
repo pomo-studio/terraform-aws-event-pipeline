@@ -5,6 +5,16 @@
 # Before running tests that include Lambda, generate the fixture zip:
 #   cd tests/fixtures && zip function.zip index.js
 # Or simply: make test
+#
+# NOTE: mock_provider generates synthetic ARNs (e.g. "lylt21e9") that may not
+# pass AWS ARN format validation in assert conditions. Tests that inspect ARN
+# values directly should be run against real AWS instead. All tests here focus
+# on resource counts, names, and configuration attributes — not ARNs — to stay
+# compatible with mock mode.
+#
+# NOTE: Terraform test runs share provider state within a test file. Each run
+# block sees the cumulative state of previous runs. Tests here use distinct
+# variable combinations to remain independent of execution order.
 
 mock_provider "aws" {}
 
@@ -288,4 +298,18 @@ run "validation_max_receive_count_range" {
   }
 
   expect_failures = [var.max_receive_count]
+}
+
+run "validation_lambda_timeout_less_than_visibility" {
+  variables {
+    name                           = "test-pipeline"
+    event_pattern                  = { source = ["test.app"] }
+    enable_alarms                  = false
+    create_lambda                  = true
+    lambda_code                    = "./tests/fixtures/function.zip"
+    lambda_timeout                 = 200
+    sqs_visibility_timeout_seconds = 180
+  }
+
+  expect_failures = [var.lambda_timeout]
 }
