@@ -66,6 +66,16 @@ output "lambda_role_arn" {
   value       = var.create_lambda ? aws_iam_role.lambda[0].arn : null
 }
 
+output "log_group_name" {
+  description = "CloudWatch log group for EventBridge events (null if logging disabled)"
+  value       = var.enable_logging ? aws_cloudwatch_log_group.eventbridge[0].name : null
+}
+
+output "log_group_arn" {
+  description = "CloudWatch log group ARN for EventBridge events (null if logging disabled)"
+  value       = var.enable_logging ? aws_cloudwatch_log_group.eventbridge[0].arn : null
+}
+
 output "alarm_topic_arn" {
   description = "ARN of the SNS topic for alarms (null if disabled)"
   value       = var.enable_alarms ? aws_sns_topic.alarms[0].arn : null

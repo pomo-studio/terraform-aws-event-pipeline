@@ -11,6 +11,7 @@ Opinionated Terraform module for AWS event-driven architectures.
 - `aws_sqs_queue` — Main event queue with configurable retention
 - `aws_cloudwatch_event_target` — Routes matched events to SQS
 - SQS queue policy — Allows EventBridge to send messages
+- `aws_cloudwatch_log_group` — Captures EventBridge events for debugging (when `enable_logging = true`)
 
 **Conditional:**
 - `aws_cloudwatch_event_bus` — Custom event bus (when `create_event_bus = true`)
@@ -97,6 +98,7 @@ module "pipeline" {
 | `dlq_url` | Dead Letter Queue URL (null if disabled) |
 | `event_rule_name` | EventBridge rule name |
 | `event_bus_name` | Event bus name (or "default") |
+| `log_group_name` | CloudWatch log group for events (null if logging disabled) |
 | `lambda_function_name` | Lambda function name (null if disabled) |
 | `alarm_topic_arn` | SNS topic for alarms (null if disabled) |
 
@@ -123,6 +125,43 @@ event_pattern = {
     amount = { numeric = [">=", 500] }
   }
 }
+```
+
+## Debugging and Monitoring
+
+### Viewing Events
+
+When `enable_logging = true`, all matched events are sent to CloudWatch Logs:
+
+```bash
+# View the log group
+aws logs tail /aws/events/prod-order-events --follow
+
+# Or in console: CloudWatch → Log Groups → /aws/events/<name>
+```
+
+### Key Log Groups
+
+| Log Group | Contents |
+|-----------|----------|
+| `/aws/events/<name>` | Events matched by EventBridge rule |
+| `/aws/lambda/<name>-processor` | Lambda function logs (if enabled) |
+
+### Common Debugging Commands
+
+```bash
+# Check what's in the queue
+aws sqs get-queue-attributes \
+  --queue-url $(terraform output -raw queue_url) \
+  --attribute-names ApproximateNumberOfMessages
+
+# Peek at DLQ messages
+aws sqs receive-message \
+  --queue-url $(terraform output -raw dlq_url) \
+  --max-number-of-messages 10
+
+# Check Lambda logs
+aws logs tail "/aws/lambda/$(terraform output -raw lambda_function_name)"
 ```
 
 ## Retry Logic

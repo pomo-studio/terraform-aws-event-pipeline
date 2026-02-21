@@ -84,6 +84,62 @@ resource "aws_sqs_queue_policy" "this" {
 }
 
 # ==============================================================================
+# EventBridge Logging
+# ==============================================================================
+
+resource "aws_cloudwatch_log_group" "eventbridge" {
+  count = var.enable_logging ? 1 : 0
+
+  name              = "/aws/events/${var.name}"
+  retention_in_days = 14
+
+  tags = local.tags
+}
+
+# IAM role for EventBridge to write logs
+resource "aws_iam_role" "eventbridge_logging" {
+  count = var.enable_logging ? 1 : 0
+
+  name = "${var.name}-eventbridge-logs"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy" "eventbridge_logging" {
+  count = var.enable_logging ? 1 : 0
+
+  name = "${var.name}-eventbridge-logs"
+  role = aws_iam_role.eventbridge_logging[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "${aws_cloudwatch_log_group.eventbridge[0].arn}:*"
+      }
+    ]
+  })
+}
+
+# ==============================================================================
 # EventBridge Rule and Target
 # ==============================================================================
 

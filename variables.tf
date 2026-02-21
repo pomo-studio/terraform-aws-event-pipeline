@@ -98,6 +98,23 @@ variable "sqs_message_retention_seconds" {
   default     = 345600 # 4 days
 }
 
+variable "enable_logging" {
+  description = "Enable CloudWatch logging for EventBridge events"
+  type        = bool
+  default     = true
+}
+
+variable "log_level" {
+  description = "EventBridge logging level: ERROR, INFO, or DEBUG"
+  type        = string
+  default     = "ERROR"
+
+  validation {
+    condition     = contains(["ERROR", "INFO", "DEBUG"], var.log_level)
+    error_message = "log_level must be ERROR, INFO, or DEBUG."
+  }
+}
+
 variable "enable_alarms" {
   description = "Enable CloudWatch alarms for monitoring"
   type        = bool
