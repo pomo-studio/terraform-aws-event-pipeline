@@ -1,6 +1,8 @@
 # Unit tests for terraform-aws-event-pipeline
 #
-# Requires Terraform >= 1.7.0 (mock_provider support)
+# Requires Terraform >= 1.9.0
+#   - mock_provider support (>= 1.7.0)
+#   - cross-variable references in validation blocks (>= 1.9.0)
 #
 # Before running tests that include Lambda, generate the fixture zip:
 #   cd tests/fixtures && zip function.zip index.js
@@ -15,6 +17,11 @@
 # NOTE: Terraform test runs share provider state within a test file. Each run
 # block sees the cumulative state of previous runs. Tests here use distinct
 # variable combinations to remain independent of execution order.
+#
+# NOTE: All expect_failures runs use command = plan. Variable validations fire
+# at plan-time; with command = apply (the default), a plan-time failure blocks
+# the apply and Terraform test marks the run as failed even when expect_failures
+# is set. command = plan captures the failure at the correct stage.
 
 mock_provider "aws" {
   # Provide valid ARN formats so the AWS provider's ARN validation doesn't
@@ -70,6 +77,12 @@ mock_provider "aws" {
     defaults = {
       arn           = "arn:aws:lambda:us-east-1:123456789012:function:mock-function"
       function_name = "mock-function"
+    }
+  }
+
+  mock_resource "aws_lambda_event_source_mapping" {
+    defaults = {
+      function_response_types = ["ReportBatchItemFailures"]
     }
   }
 
@@ -304,9 +317,14 @@ run "alarms_not_created_when_disabled" {
 
 # ==============================================================================
 # Validation rules
+# All use command = plan: variable validations fire at plan-time. With the
+# default command = apply, a plan-time failure blocks the apply and Terraform
+# marks the run failed even when expect_failures is set.
 # ==============================================================================
 
 run "validation_lambda_code_required" {
+  command = plan
+
   variables {
     name          = "test-pipeline"
     event_pattern = { source = ["test.app"] }
@@ -319,6 +337,8 @@ run "validation_lambda_code_required" {
 }
 
 run "validation_alarm_email_required" {
+  command = plan
+
   variables {
     name          = "test-pipeline"
     event_pattern = { source = ["test.app"] }
@@ -330,6 +350,8 @@ run "validation_alarm_email_required" {
 }
 
 run "validation_batch_size_minimum" {
+  command = plan
+
   variables {
     name              = "test-pipeline"
     event_pattern     = { source = ["test.app"] }
@@ -341,6 +363,8 @@ run "validation_batch_size_minimum" {
 }
 
 run "validation_batch_size_maximum" {
+  command = plan
+
   variables {
     name              = "test-pipeline"
     event_pattern     = { source = ["test.app"] }
@@ -352,6 +376,8 @@ run "validation_batch_size_maximum" {
 }
 
 run "validation_max_receive_count_range" {
+  command = plan
+
   variables {
     name              = "test-pipeline"
     event_pattern     = { source = ["test.app"] }
@@ -363,6 +389,8 @@ run "validation_max_receive_count_range" {
 }
 
 run "validation_lambda_timeout_less_than_visibility" {
+  command = plan
+
   variables {
     name                           = "test-pipeline"
     event_pattern                  = { source = ["test.app"] }
