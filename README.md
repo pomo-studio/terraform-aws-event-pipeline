@@ -14,39 +14,7 @@ This module manages the **routing and processing infrastructure** — the plumbi
 between your event source and your business logic. It does not manage what
 produces events or what your Lambda code does.
 
-```
-╔══════════════════════════════════════════════════════════╗
-║                  YOUR RESPONSIBILITY                     ║
-║                                                          ║
-║  ┌─────────────────┐     ┌──────────────────────────┐   ║
-║  │  Your app / AWS │     │  EventBridge event bus   │   ║
-║  │  service (EC2,  │────►│  (default bus already    │   ║
-║  │  RDS, S3, etc.) │     │  exists in your account) │   ║
-║  └─────────────────┘     └────────────┬─────────────┘   ║
-║   calls events:PutEvents              │                  ║
-╚══════════════════════════════════════ │ ════════════════╝
-                          event matches │ your pattern
-╔══════════════════════════════════════ ▼ ════════════════╗
-║                  THIS MODULE CREATES                     ║
-║                                                          ║
-║  ┌──────────────┐  ┌──────────┐  ┌────────────────────┐ ║
-║  │  EventBridge │─►│   SQS    │─►│  Lambda (optional) │ ║
-║  │    Rule      │  │  Queue   │  │  your code, your   │ ║
-║  └──────────────┘  └────┬─────┘  │  zip file          │ ║
-║                         │        └────────────────────┘ ║
-║                    ┌────▼─────┐  ┌────────────────────┐ ║
-║                    │   DLQ    │  │  CloudWatch Alarms  │ ║
-║                    └──────────┘  └────────────────────┘ ║
-╚══════════════════════════════════════════════════════════╝
-                          │
-╔══════════════════════════════════════════════════════════╗
-║                  YOUR RESPONSIBILITY                     ║
-║                                                          ║
-║  • Reprocess or discard messages from the DLQ            ║
-║  • Write and maintain the Lambda function code           ║
-║  • Update the zip file when your code changes            ║
-╚══════════════════════════════════════════════════════════╝
-```
+See [Architecture Documentation](docs/architecture.md) for full diagrams and design details.
 
 ### What you bring
 
