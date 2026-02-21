@@ -34,12 +34,14 @@ resource "aws_cloudwatch_event_bus" "this" {
 # ==============================================================================
 
 # Dead Letter Queue (conditional)
+# DLQ visibility timeout is short because messages are only moved here after
+# processing fails. They're not being actively processed from the DLQ.
 resource "aws_sqs_queue" "dlq" {
   count = var.enable_dlq ? 1 : 0
 
   name                       = "${var.name}-dlq"
   message_retention_seconds  = var.sqs_message_retention_seconds
-  visibility_timeout_seconds = 30
+  visibility_timeout_seconds = var.dlq_visibility_timeout_seconds
 
   tags = local.tags
 }
@@ -139,6 +141,16 @@ resource "aws_iam_role_policy" "eventbridge_logging" {
   })
 }
 
+# EventBridge target to send events to CloudWatch Logs
+resource "aws_cloudwatch_event_target" "logs" {
+  count = var.enable_logging ? 1 : 0
+
+  rule      = aws_cloudwatch_event_rule.this.name
+  target_id = "CloudWatchLogs"
+  arn       = aws_cloudwatch_log_group.eventbridge[0].arn
+  role_arn  = aws_iam_role.eventbridge_logging[0].arn
+}
+
 # ==============================================================================
 # EventBridge Rule and Target
 # ==============================================================================
@@ -168,13 +180,15 @@ resource "aws_cloudwatch_event_target" "sqs" {
 resource "aws_lambda_function" "processor" {
   count = var.create_lambda ? 1 : 0
 
-  function_name = "${var.name}-processor"
-  role          = aws_iam_role.lambda[0].arn
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  filename      = var.lambda_code
-  timeout       = var.lambda_timeout
-  memory_size   = var.lambda_memory_size
+  function_name    = "${var.name}-processor"
+  description      = "Event processor for ${var.name} pipeline"
+  role             = aws_iam_role.lambda[0].arn
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  filename         = var.lambda_code
+  source_code_hash = filebase64sha256(var.lambda_code)
+  timeout          = var.lambda_timeout
+  memory_size      = var.lambda_memory_size
 
   environment {
     variables = var.lambda_environment_variables
@@ -189,7 +203,7 @@ resource "aws_lambda_event_source_mapping" "sqs" {
 
   event_source_arn = aws_sqs_queue.this.arn
   function_name    = aws_lambda_function.processor[0].arn
-  batch_size       = 10
+  batch_size       = var.lambda_batch_size
   enabled          = true
 }
 

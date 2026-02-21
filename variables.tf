@@ -55,6 +55,11 @@ variable "lambda_timeout" {
   description = "Lambda function timeout in seconds (must be less than SQS visibility timeout)"
   type        = number
   default     = 30
+
+  validation {
+    condition     = var.lambda_timeout < var.sqs_visibility_timeout_seconds
+    error_message = "lambda_timeout must be less than sqs_visibility_timeout_seconds to prevent duplicate processing."
+  }
 }
 
 variable "lambda_memory_size" {
@@ -67,6 +72,17 @@ variable "lambda_environment_variables" {
   description = "Environment variables for Lambda function"
   type        = map(string)
   default     = {}
+}
+
+variable "lambda_batch_size" {
+  description = "Maximum number of records to read from SQS in one batch (1-10000)"
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.lambda_batch_size >= 1 && var.lambda_batch_size <= 10000
+    error_message = "lambda_batch_size must be between 1 and 10000."
+  }
 }
 
 variable "enable_dlq" {
@@ -92,6 +108,12 @@ variable "sqs_visibility_timeout_seconds" {
   default     = 180
 }
 
+variable "dlq_visibility_timeout_seconds" {
+  description = "DLQ visibility timeout in seconds (DLQ is for holding failed messages, not processing)"
+  type        = number
+  default     = 30
+}
+
 variable "sqs_message_retention_seconds" {
   description = "SQS message retention period in seconds"
   type        = number
@@ -102,17 +124,6 @@ variable "enable_logging" {
   description = "Enable CloudWatch logging for EventBridge events"
   type        = bool
   default     = true
-}
-
-variable "log_level" {
-  description = "EventBridge logging level: ERROR, INFO, or DEBUG"
-  type        = string
-  default     = "ERROR"
-
-  validation {
-    condition     = contains(["ERROR", "INFO", "DEBUG"], var.log_level)
-    error_message = "log_level must be ERROR, INFO, or DEBUG."
-  }
 }
 
 variable "enable_alarms" {
