@@ -4,6 +4,10 @@ Opinionated Terraform module for AWS event-driven architectures.
 
 **Registry**: `pomo-studio/event-pipeline/aws`
 
+> 📚 **New to event-driven architectures?** Start with the [Getting Started Guide](docs/getting-started.md)
+> 
+> 🏗️ **Want to understand the design?** Read the [Architecture Documentation](docs/architecture.md)
+
 ## What it creates
 
 **Always:**
