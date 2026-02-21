@@ -2,6 +2,12 @@
 
 Terraform module for AWS event-driven pipelines — EventBridge → SQS → Lambda with optional DLQ, alarms, and CloudWatch logging.
 
+- Full EventBridge → SQS → Lambda wiring in one module call — no queue policies or IAM to wire manually
+- DLQ and retry logic on by default — failed events are preserved, never silently dropped
+- CloudWatch alarms for DLQ depth, Lambda errors, and throttles included out of the box
+- Least-privilege Lambda IAM role auto-generated and scoped to its own queue only
+- Caller owns producers and business logic — module handles all the event routing plumbing
+
 **Registry**: `pomo-studio/event-pipeline/aws`
 
 ## Usage
@@ -140,6 +146,13 @@ Conditional:
 
 - [`examples/basic`](examples/basic/) — EventBridge → SQS only
 - [`examples/complete`](examples/complete/) — full pipeline with Lambda and alarms
+
+## Requirements
+
+| Tool | Version |
+|------|---------|
+| Terraform | `>= 1.9.0` |
+| AWS provider | `~> 5.0` |
 
 ## License
 
