@@ -1,17 +1,6 @@
 # Basic Example: EventBridge → SQS only
 # No Lambda, no alarms - just reliable event queuing
 
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
 provider "aws" {
   region = var.aws_region
 }
