@@ -5,7 +5,7 @@ locals {
   # Determine event bus name
   event_bus_name = var.create_event_bus ? aws_cloudwatch_event_bus.this[0].name : "default"
   event_bus_arn  = var.create_event_bus ? aws_cloudwatch_event_bus.this[0].arn : "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:event-bus/default"
-  
+
   # Common tags
   tags = merge(
     {

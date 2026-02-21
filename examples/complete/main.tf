@@ -72,11 +72,11 @@ module "event_pipeline" {
   }
 
   # Create Lambda processor
-  create_lambda = true
-  lambda_code   = data.archive_file.lambda.output_path
-  lambda_handler = "index.handler"
-  lambda_runtime = "nodejs20.x"
-  lambda_timeout = 30
+  create_lambda      = true
+  lambda_code        = data.archive_file.lambda.output_path
+  lambda_handler     = "index.handler"
+  lambda_runtime     = "nodejs20.x"
+  lambda_timeout     = 30
   lambda_memory_size = 256
 
   lambda_environment_variables = {
@@ -85,8 +85,8 @@ module "event_pipeline" {
   }
 
   # SQS configuration
-  sqs_visibility_timeout_seconds = 180  # 6x Lambda timeout
-  sqs_message_retention_seconds  = 86400  # 1 day
+  sqs_visibility_timeout_seconds = 180   # 6x Lambda timeout
+  sqs_message_retention_seconds  = 86400 # 1 day
 
   # Enable DLQ with 3 retries
   enable_dlq        = true
@@ -96,8 +96,8 @@ module "event_pipeline" {
   enable_alarms = true
   alarm_email   = var.alarm_email
 
-  dlq_alarm_threshold     = 1
-  lambda_error_threshold  = 1
+  dlq_alarm_threshold    = 1
+  lambda_error_threshold = 1
 
   tags = {
     Environment = var.environment

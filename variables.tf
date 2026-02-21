@@ -90,7 +90,7 @@ variable "sqs_visibility_timeout_seconds" {
 variable "sqs_message_retention_seconds" {
   description = "SQS message retention period in seconds"
   type        = number
-  default     = 345600  # 4 days
+  default     = 345600 # 4 days
 }
 
 variable "enable_alarms" {
