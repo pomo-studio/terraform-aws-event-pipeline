@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-21
+
+### Fixed
+- `aws_cloudwatch_event_target.logs` was missing `event_bus_name`, causing it to
+  target the default event bus instead of the custom bus. When `create_event_bus=true`,
+  the CloudWatch Logs target now correctly references the custom bus.
+
 ## [1.1.0] - 2026-02-21
 
 ### Added

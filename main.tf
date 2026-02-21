@@ -145,10 +145,11 @@ resource "aws_iam_role_policy" "eventbridge_logging" {
 resource "aws_cloudwatch_event_target" "logs" {
   count = var.enable_logging ? 1 : 0
 
-  rule      = aws_cloudwatch_event_rule.this.name
-  target_id = "CloudWatchLogs"
-  arn       = aws_cloudwatch_log_group.eventbridge[0].arn
-  role_arn  = aws_iam_role.eventbridge_logging[0].arn
+  rule           = aws_cloudwatch_event_rule.this.name
+  event_bus_name = local.event_bus_name
+  target_id      = "CloudWatchLogs"
+  arn            = aws_cloudwatch_log_group.eventbridge[0].arn
+  role_arn       = aws_iam_role.eventbridge_logging[0].arn
 }
 
 # ==============================================================================
