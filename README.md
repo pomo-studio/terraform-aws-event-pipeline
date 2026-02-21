@@ -5,8 +5,81 @@ Opinionated Terraform module for AWS event-driven architectures.
 **Registry**: `pomo-studio/event-pipeline/aws`
 
 > 📚 **New to event-driven architectures?** Start with the [Getting Started Guide](docs/getting-started.md)
-> 
+>
 > 🏗️ **Want to understand the design?** Read the [Architecture Documentation](docs/architecture.md)
+
+## Module scope
+
+This module manages the **routing and processing infrastructure** — the plumbing
+between your event source and your business logic. It does not manage what
+produces events or what your Lambda code does.
+
+```
+╔══════════════════════════════════════════════════════════╗
+║                  YOUR RESPONSIBILITY                     ║
+║                                                          ║
+║  ┌─────────────────┐     ┌──────────────────────────┐   ║
+║  │  Your app / AWS │     │  EventBridge event bus   │   ║
+║  │  service (EC2,  │────►│  (default bus already    │   ║
+║  │  RDS, S3, etc.) │     │  exists in your account) │   ║
+║  └─────────────────┘     └────────────┬─────────────┘   ║
+║   calls events:PutEvents              │                  ║
+╚══════════════════════════════════════ │ ════════════════╝
+                          event matches │ your pattern
+╔══════════════════════════════════════ ▼ ════════════════╗
+║                  THIS MODULE CREATES                     ║
+║                                                          ║
+║  ┌──────────────┐  ┌──────────┐  ┌────────────────────┐ ║
+║  │  EventBridge │─►│   SQS    │─►│  Lambda (optional) │ ║
+║  │    Rule      │  │  Queue   │  │  your code, your   │ ║
+║  └──────────────┘  └────┬─────┘  │  zip file          │ ║
+║                         │        └────────────────────┘ ║
+║                    ┌────▼─────┐  ┌────────────────────┐ ║
+║                    │   DLQ    │  │  CloudWatch Alarms  │ ║
+║                    └──────────┘  └────────────────────┘ ║
+╚══════════════════════════════════════════════════════════╝
+                          │
+╔══════════════════════════════════════════════════════════╗
+║                  YOUR RESPONSIBILITY                     ║
+║                                                          ║
+║  • Reprocess or discard messages from the DLQ            ║
+║  • Write and maintain the Lambda function code           ║
+║  • Update the zip file when your code changes            ║
+╚══════════════════════════════════════════════════════════╝
+```
+
+### What you bring
+
+| Your responsibility | Detail |
+|---------------------|--------|
+| **Event source** | Your app, an AWS service (S3, RDS, etc.), or a partner integration — whatever calls `events:PutEvents` |
+| **IAM for your producer** | The role/policy that allows your event source to call `events:PutEvents` on the bus |
+| **The event bus** | The default EventBridge bus exists in every AWS account; optionally this module creates a custom one via `create_event_bus = true` |
+| **Lambda function code** | You write the handler and provide the zip path via `lambda_code`; the module deploys and wires it |
+| **DLQ drain strategy** | When events land in the DLQ, you decide whether to reprocess them, alert on them, or discard them |
+
+### What this module brings
+
+| Module responsibility | Detail |
+|-----------------------|--------|
+| **EventBridge rule** | Pattern matching — which events get routed |
+| **EventBridge → SQS wiring** | Target, queue policy, IAM |
+| **SQS queue + DLQ** | Buffering, retry logic, redrive policy |
+| **SQS → Lambda wiring** | Event source mapping, batch size, partial failure reporting |
+| **Lambda IAM role** | Least-privilege — only the permissions needed to read from its queue |
+| **CloudWatch alarms** | DLQ depth, Lambda errors, Lambda throttles → SNS |
+| **EventBridge logging** | All matched events captured to CloudWatch Logs |
+
+### Common question: "Does this module create the EventBridge?"
+
+**Partially.** The EventBridge **bus** exists automatically in every AWS account
+(the "default" bus). This module creates the **rule** — the pattern-matching
+filter that watches the bus and routes matching events to SQS. Optionally, it
+creates a **custom bus** (`create_event_bus = true`) if you want isolation
+between teams or environments.
+
+Your application still needs to call `events:PutEvents` to put events *onto*
+the bus. That call, and the IAM permissions for it, are outside this module.
 
 ## What it creates
 

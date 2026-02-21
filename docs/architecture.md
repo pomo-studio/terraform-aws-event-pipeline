@@ -2,6 +2,51 @@
 
 This document explains the architectural pattern implemented by this module, including design decisions and AWS best practices.
 
+## Module boundary
+
+Before diving into the architecture, it helps to understand exactly what this
+module owns versus what you own.
+
+```
+Your code / AWS service
+        │
+        │  events:PutEvents  (YOUR code, YOUR IAM)
+        ▼
+┌─────────────────────────────────────────────────────────────┐
+│               EventBridge Event Bus                         │
+│  (default bus auto-exists in every account; or create a     │
+│   custom one with create_event_bus = true — module creates  │
+│   the bus but you still PutEvents onto it)                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+          ┌──────────────▼──────────────────────────────────┐
+          │         THIS MODULE MANAGES                      │
+          │                                                   │
+          │  EventBridge Rule (pattern filter)               │
+          │          │                                        │
+          │          ▼                                        │
+          │  SQS Queue  ──►  DLQ (on failure)               │
+          │          │                                        │
+          │          ▼                                        │
+          │  Lambda Function  (you provide the code/zip)     │
+          │  Lambda IAM Role  (module creates, least-priv)   │
+          │  CloudWatch Alarms + SNS                         │
+          └─────────────────────────────────────────────────-┘
+                         │
+          ┌──────────────▼──────────────────────────────────┐
+          │         YOUR RESPONSIBILITY (post-module)        │
+          │                                                   │
+          │  • Business logic inside the Lambda handler      │
+          │  • Updating the Lambda zip when code changes     │
+          │  • DLQ drain strategy (reprocess / discard)      │
+          │  • Any downstream systems Lambda writes to       │
+          └─────────────────────────────────────────────────-┘
+```
+
+**Key boundary rule**: The module manages the *infrastructure wiring*. You own
+the event source (what puts events on the bus) and the event sink (what your
+Lambda actually does with the event).
+
 ## The Pattern
 
 This module implements the **"Event Router + Queue + Consumer"** pattern, which is AWS's recommended approach for reliable event processing.
