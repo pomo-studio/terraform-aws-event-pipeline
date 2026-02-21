@@ -32,6 +32,11 @@ variable "lambda_code" {
   description = "Path to Lambda deployment package zip file (required if create_lambda=true)"
   type        = string
   default     = null
+
+  validation {
+    condition     = var.create_lambda == false || var.lambda_code != null
+    error_message = "lambda_code is required when create_lambda is true."
+  }
 }
 
 variable "lambda_handler" {
@@ -103,6 +108,11 @@ variable "alarm_email" {
   description = "Email address for alarm notifications (required if enable_alarms=true)"
   type        = string
   default     = null
+
+  validation {
+    condition     = var.enable_alarms == false || var.alarm_email != null
+    error_message = "alarm_email is required when enable_alarms is true."
+  }
 }
 
 variable "dlq_alarm_threshold" {
