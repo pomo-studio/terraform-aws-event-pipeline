@@ -16,7 +16,69 @@
 # block sees the cumulative state of previous runs. Tests here use distinct
 # variable combinations to remain independent of execution order.
 
-mock_provider "aws" {}
+mock_provider "aws" {
+  # Provide valid ARN formats so the AWS provider's ARN validation doesn't
+  # reject the synthetic values that mock_provider generates by default.
+
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      name = "us-east-1"
+    }
+  }
+
+  mock_resource "aws_cloudwatch_event_bus" {
+    defaults = {
+      arn = "arn:aws:events:us-east-1:123456789012:event-bus/mock-bus"
+    }
+  }
+
+  mock_resource "aws_cloudwatch_event_rule" {
+    defaults = {
+      arn = "arn:aws:events:us-east-1:123456789012:rule/mock-rule"
+    }
+  }
+
+  mock_resource "aws_cloudwatch_log_group" {
+    defaults = {
+      arn = "arn:aws:logs:us-east-1:123456789012:log-group:/mock/log-group"
+    }
+  }
+
+  mock_resource "aws_iam_role" {
+    defaults = {
+      arn  = "arn:aws:iam::123456789012:role/mock-role"
+      id   = "mock-role"
+      name = "mock-role"
+    }
+  }
+
+  mock_resource "aws_sqs_queue" {
+    defaults = {
+      arn = "arn:aws:sqs:us-east-1:123456789012:mock-queue"
+      url = "https://sqs.us-east-1.amazonaws.com/123456789012/mock-queue"
+      id  = "https://sqs.us-east-1.amazonaws.com/123456789012/mock-queue"
+    }
+  }
+
+  mock_resource "aws_lambda_function" {
+    defaults = {
+      arn           = "arn:aws:lambda:us-east-1:123456789012:function:mock-function"
+      function_name = "mock-function"
+    }
+  }
+
+  mock_resource "aws_sns_topic" {
+    defaults = {
+      arn = "arn:aws:sns:us-east-1:123456789012:mock-topic"
+    }
+  }
+}
 
 # ==============================================================================
 # SQS + EventBridge core
