@@ -201,10 +201,11 @@ resource "aws_lambda_function" "processor" {
 resource "aws_lambda_event_source_mapping" "sqs" {
   count = var.create_lambda ? 1 : 0
 
-  event_source_arn = aws_sqs_queue.this.arn
-  function_name    = aws_lambda_function.processor[0].arn
-  batch_size       = var.lambda_batch_size
-  enabled          = true
+  event_source_arn        = aws_sqs_queue.this.arn
+  function_name           = aws_lambda_function.processor[0].arn
+  batch_size              = var.lambda_batch_size
+  enabled                 = true
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 # ==============================================================================
@@ -257,7 +258,8 @@ resource "aws_iam_role_policy" "lambda_sqs" {
           "sqs:ReceiveMessage",
           "sqs:DeleteMessage",
           "sqs:GetQueueAttributes",
-          "sqs:ChangeMessageVisibility"
+          "sqs:ChangeMessageVisibility",
+          "sqs:ChangeMessageVisibilityBatch"
         ]
         Resource = aws_sqs_queue.this.arn
       }

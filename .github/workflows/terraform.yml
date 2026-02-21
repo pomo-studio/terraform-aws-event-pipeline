@@ -6,12 +6,16 @@ on:
     paths:
       - '**.tf'
       - '**.tfvars'
+      - '**.tftest.hcl'
+      - 'tests/**'
       - '.github/workflows/terraform.yml'
   pull_request:
     branches: [main]
     paths:
       - '**.tf'
       - '**.tfvars'
+      - '**.tftest.hcl'
+      - 'tests/**'
       - '.github/workflows/terraform.yml'
   workflow_dispatch:
 
@@ -55,6 +59,29 @@ jobs:
       - name: Terraform Validate
         working-directory: ${{ matrix.example }}
         run: terraform validate
+
+  # Terraform unit tests
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [fmt, validate]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Generate test fixtures
+        run: cd tests/fixtures && zip function.zip index.js
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+      - name: Terraform Test
+        run: terraform test
 
   # Terraform linting with tflint
   tflint:

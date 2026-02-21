@@ -35,3 +35,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Test fixture zips are generated locally, not committed
+tests/fixtures/*.zip
