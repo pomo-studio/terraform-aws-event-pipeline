@@ -38,16 +38,15 @@ See [Architecture Documentation](docs/architecture.md) for full diagrams and des
 | **CloudWatch alarms** | DLQ depth, Lambda errors, Lambda throttles → SNS |
 | **EventBridge logging** | All matched events captured to CloudWatch Logs |
 
-### Common question: "Does this module create the EventBridge?"
+### EventBridge bus vs. rule
 
-**Partially.** The EventBridge **bus** exists automatically in every AWS account
-(the "default" bus). This module creates the **rule** — the pattern-matching
-filter that watches the bus and routes matching events to SQS. Optionally, it
-creates a **custom bus** (`create_event_bus = true`) if you want isolation
-between teams or environments.
+Every AWS account already has a default EventBridge bus. This module creates
+the **rule** on top of it — the pattern filter that routes matching events to
+SQS. Set `create_event_bus = true` for a dedicated bus when you want isolation
+between workloads or environments.
 
-Your application still needs to call `events:PutEvents` to put events *onto*
-the bus. That call, and the IAM permissions for it, are outside this module.
+Publishing events (`events:PutEvents`) and the IAM permissions for it remain
+the caller's responsibility.
 
 ## What it creates
 
