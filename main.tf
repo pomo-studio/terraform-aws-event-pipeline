@@ -186,7 +186,7 @@ resource "aws_lambda_function" "processor" {
   handler          = var.lambda_handler
   runtime          = var.lambda_runtime
   filename         = var.lambda_code
-  source_code_hash = filebase64sha256(var.lambda_code)
+  source_code_hash = var.lambda_code != null ? filebase64sha256(var.lambda_code) : null
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory_size
 
