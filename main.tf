@@ -98,46 +98,26 @@ resource "aws_cloudwatch_log_group" "eventbridge" {
   tags = local.tags
 }
 
-# IAM role for EventBridge to write logs
-resource "aws_iam_role" "eventbridge_logging" {
+# Resource-based policy allowing EventBridge to write to the log group.
+# CloudWatch Logs targets use log resource policies, not IAM role ARNs.
+resource "aws_cloudwatch_log_resource_policy" "eventbridge" {
   count = var.enable_logging ? 1 : 0
 
-  name = "${var.name}-eventbridge-logs"
+  policy_name = "${var.name}-eventbridge-logs"
 
-  assume_role_policy = jsonencode({
+  policy_document = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "events.amazonaws.com"
-        }
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "events.amazonaws.com"
       }
-    ]
-  })
-
-  tags = local.tags
-}
-
-resource "aws_iam_role_policy" "eventbridge_logging" {
-  count = var.enable_logging ? 1 : 0
-
-  name = "${var.name}-eventbridge-logs"
-  role = aws_iam_role.eventbridge_logging[0].id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "${aws_cloudwatch_log_group.eventbridge[0].arn}:*"
-      }
-    ]
+      Action = [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Resource = "${aws_cloudwatch_log_group.eventbridge[0].arn}:*"
+    }]
   })
 }
 
@@ -149,7 +129,7 @@ resource "aws_cloudwatch_event_target" "logs" {
   event_bus_name = local.event_bus_name
   target_id      = "CloudWatchLogs"
   arn            = aws_cloudwatch_log_group.eventbridge[0].arn
-  role_arn       = aws_iam_role.eventbridge_logging[0].arn
+  # No role_arn — CloudWatch Logs targets use resource-based policies
 }
 
 # ==============================================================================
