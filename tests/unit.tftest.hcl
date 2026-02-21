@@ -57,6 +57,12 @@ mock_provider "aws" {
     }
   }
 
+  mock_resource "aws_cloudwatch_log_resource_policy" {
+    defaults = {
+      id = "mock-log-resource-policy"
+    }
+  }
+
   mock_resource "aws_iam_role" {
     defaults = {
       arn  = "arn:aws:iam::123456789012:role/mock-role"
@@ -181,8 +187,13 @@ run "logging_enabled_creates_target" {
   }
 
   assert {
-    condition     = length(aws_iam_role.eventbridge_logging) == 1
-    error_message = "IAM role for logging must be created when enable_logging=true"
+    condition     = length(aws_cloudwatch_log_resource_policy.eventbridge) == 1
+    error_message = "Log resource policy must be created when enable_logging=true"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_event_target.logs[0].role_arn == null
+    error_message = "CloudWatch Logs target must not have a role_arn (uses resource policy instead)"
   }
 }
 
