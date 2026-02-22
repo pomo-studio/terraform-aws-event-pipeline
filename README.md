@@ -1,5 +1,15 @@
 # terraform-aws-event-pipeline
 
+## Deprecated
+
+This module is deprecated and maintained for existing consumers only.
+
+For new implementations, use:
+- `pomo-studio/event-bus/aws` for shared EventBridge bus infrastructure
+- `pomo-studio/event-consumer/aws` for per-service EventBridge -> SQS -> optional Lambda consumers
+
+See [Migration](#migration) for a direct replacement example.
+
 Terraform module for AWS event-driven pipelines — EventBridge → SQS → Lambda with optional DLQ, alarms, and CloudWatch logging.
 
 - Full EventBridge → SQS → Lambda wiring in one module call — no queue policies or IAM to wire manually
@@ -62,6 +72,52 @@ module "pipeline" {
   alarm_email   = "alerts@example.com"
 
   tags = { Environment = "production" }
+}
+```
+
+## Migration
+
+Replace one `event-pipeline` module call with two explicit module calls:
+
+```hcl
+module "bus" {
+  source  = "pomo-studio/event-bus/aws"
+  version = "~> 1.0"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  name = "prod-payment-events"
+}
+
+module "consumer" {
+  source  = "pomo-studio/event-consumer/aws"
+  version = "~> 1.0"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  name             = "prod-payment-events"
+  bus_name_primary = module.bus.bus_name_primary
+  bus_name_dr      = module.bus.bus_name_dr
+
+  event_pattern = {
+    source      = ["myapp.payments"]
+    detail-type = ["Payment Processed"]
+  }
+
+  create_lambda      = true
+  lambda_code        = "${path.module}/function.zip"
+  lambda_runtime     = "nodejs20.x"
+  lambda_timeout     = 30
+  lambda_memory_size = 256
+
+  enable_alarms = true
+  alarm_email   = "alerts@example.com"
 }
 ```
 
