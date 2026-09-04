@@ -8,6 +8,7 @@ on:
       - '**.tfvars'
       - '**.tftest.hcl'
       - 'tests/**'
+      - '.tflint.hcl'
       - '.github/workflows/terraform.yml'
   pull_request:
     branches: [main]
@@ -16,63 +17,66 @@ on:
       - '**.tfvars'
       - '**.tftest.hcl'
       - 'tests/**'
+      - '.tflint.hcl'
       - '.github/workflows/terraform.yml'
   workflow_dispatch:
 
+concurrency:
+  group: terraform-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # Terraform formatting check
   fmt:
     name: Format Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.9.0"
+          terraform_version: "1.16.1"
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-  # Terraform validation
   validate:
-    name: Validate
+    name: Validate (${{ matrix.dir }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        example: ["examples/basic", "examples/complete"]
+        dir: [".", "examples/basic", "examples/complete"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.9.0"
+          terraform_version: "1.16.1"
 
       - name: Terraform Init
-        working-directory: ${{ matrix.example }}
+        working-directory: ${{ matrix.dir }}
         run: terraform init -backend=false
 
       - name: Terraform Validate
-        working-directory: ${{ matrix.example }}
+        working-directory: ${{ matrix.dir }}
         run: terraform validate
 
-  # Terraform unit tests
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
     needs: [fmt, validate]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.9.0"
+          terraform_version: "1.16.1"
 
       - name: Generate test fixtures
         run: cd tests/fixtures && zip function.zip index.js
@@ -83,16 +87,15 @@ jobs:
       - name: Terraform Test
         run: terraform test
 
-  # Terraform linting with tflint
   tflint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup TFLint
-        uses: terraform-linters/setup-tflint@v4
+        uses: terraform-linters/setup-tflint@v6
         with:
           tflint_version: latest
 
