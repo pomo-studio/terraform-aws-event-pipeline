@@ -1,5 +1,8 @@
 # terraform-aws-event-pipeline
 
+[![Terraform Validation](https://github.com/pomo-studio/terraform-aws-event-pipeline/actions/workflows/terraform.yml/badge.svg)](https://github.com/pomo-studio/terraform-aws-event-pipeline/actions/workflows/terraform.yml)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-844FBA?logo=terraform)](https://registry.terraform.io/modules/pomo-studio/event-pipeline/aws)
+
 ## Deprecated
 
 This module is deprecated and maintained for existing consumers only.
