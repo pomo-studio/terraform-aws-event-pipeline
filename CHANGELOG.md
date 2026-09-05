@@ -1,9 +1,23 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.1.5] - 2026-09-05
+
+### Added
+- Changelog entries for the v1.1.4 maintenance sprint release
+
+## [1.1.4] - 2026-09-04
+
+### Changed
+- AWS provider constraint relaxed to `>= 5.0, < 7.0`
+- Modernized CI and release workflows to current actions (`checkout@v7`, `setup-terraform@v4`, `softprops/action-gh-release@v3`); preserved the `terraform test` job
+- Module is superseded by `event-bus` + `event-consumer` but remains maintained; README documents the deprecation and migration path
+
+### Added
+- `.tflint.hcl` configuration
+- README badges
+- Committed Terraform lock files
 
 ## [1.1.3] - 2026-02-22
 
@@ -85,3 +99,5 @@ module inputs or outputs are required.
 
 [1.1.0]: https://github.com/pomo-studio/terraform-aws-event-pipeline/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pomo-studio/terraform-aws-event-pipeline/releases/tag/v1.0.0
+
+> Historical releases are documented in [GitHub Releases](https://github.com/pomo-studio/terraform-aws-event-pipeline/releases).
