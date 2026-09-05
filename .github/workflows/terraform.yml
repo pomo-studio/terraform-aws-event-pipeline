@@ -23,6 +23,9 @@ on:
       - '.github/workflows/interface-docs.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: terraform-validation-${{ github.ref }}
   cancel-in-progress: true
@@ -34,6 +37,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
@@ -53,6 +58,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
@@ -74,6 +81,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
@@ -95,6 +104,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
