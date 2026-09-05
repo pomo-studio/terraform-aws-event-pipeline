@@ -1,0 +1,27 @@
+name: Module Interface Docs
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: Generated interface drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.24.2'
+          cache: false
+      - name: Install pinned terraform-docs
+        run: go install github.com/terraform-docs/terraform-docs@v0.20.0
+      - name: Check generated README
+        run: terraform-docs --output-check .
