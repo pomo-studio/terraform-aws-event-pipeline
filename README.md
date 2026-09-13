@@ -130,15 +130,15 @@ module "consumer" {
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.63.0 |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.64.0 |
 
 ## Modules
 
@@ -147,7 +147,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [aws_cloudwatch_event_bus.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_bus) | resource |
 | [aws_cloudwatch_event_rule.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
 | [aws_cloudwatch_event_target.logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
@@ -173,7 +173,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_alarm_email"></a> [alarm\_email](#input\_alarm\_email) | Email address for alarm notifications (required if enable\_alarms=true) | `string` | `null` | no |
 | <a name="input_create_event_bus"></a> [create\_event\_bus](#input\_create\_event\_bus) | Create a custom event bus. If false, uses the default event bus. | `bool` | `false` | no |
 | <a name="input_create_lambda"></a> [create\_lambda](#input\_create\_lambda) | Create a Lambda function to process events from SQS | `bool` | `false` | no |
@@ -200,7 +200,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_alarm_topic_arn"></a> [alarm\_topic\_arn](#output\_alarm\_topic\_arn) | ARN of the SNS topic for alarms (null if disabled) |
 | <a name="output_dlq_alarm_name"></a> [dlq\_alarm\_name](#output\_dlq\_alarm\_name) | Name of the DLQ depth alarm (null if disabled) |
 | <a name="output_dlq_arn"></a> [dlq\_arn](#output\_dlq\_arn) | ARN of the Dead Letter Queue (null if disabled) |
