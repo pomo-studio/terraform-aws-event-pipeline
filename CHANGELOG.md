@@ -2,6 +2,11 @@
 
 All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.6] - 2026-09-12
+
+### Added
+- terraform-docs-generated interface documentation in README (Requirements/Providers/Inputs/Outputs) with a CI drift check
+
 ## [1.1.5] - 2026-09-05
 
 ### Added
@@ -97,6 +102,7 @@ module inputs or outputs are required.
 - **Production-ready**: Least-privilege IAM, logging, monitoring
 - **Developer-friendly**: Validation prevents common mistakes
 
+[1.1.6]: https://github.com/pomo-studio/terraform-aws-event-pipeline/compare/v1.1.5...v1.1.6
 [1.1.0]: https://github.com/pomo-studio/terraform-aws-event-pipeline/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pomo-studio/terraform-aws-event-pipeline/releases/tag/v1.0.0
 

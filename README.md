@@ -126,70 +126,100 @@ module "consumer" {
 }
 ```
 
-## Variables
+<!-- BEGIN_TF_DOCS -->
+## Requirements
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `name` | `string` | required | Resource naming prefix |
-| `event_pattern` | `any` | required | EventBridge event pattern as a map |
-| `create_event_bus` | `bool` | `false` | Create a dedicated event bus. If false, uses the default bus |
-| `create_lambda` | `bool` | `false` | Create a Lambda processor wired to the SQS queue |
-| `lambda_code` | `string` | `null` | Path to Lambda zip (required when `create_lambda = true`) |
-| `lambda_handler` | `string` | `"index.handler"` | Lambda handler |
-| `lambda_runtime` | `string` | `"nodejs20.x"` | Lambda runtime |
-| `lambda_timeout` | `number` | `30` | Lambda timeout in seconds (must be less than `sqs_visibility_timeout_seconds`) |
-| `lambda_memory_size` | `number` | `128` | Lambda memory in MB |
-| `lambda_environment_variables` | `map(string)` | `{}` | Lambda environment variables |
-| `lambda_batch_size` | `number` | `10` | Max SQS records per Lambda invocation (1–10000) |
-| `enable_dlq` | `bool` | `true` | Enable Dead Letter Queue |
-| `max_receive_count` | `number` | `3` | Receive attempts before moving to DLQ (1–1000) |
-| `sqs_visibility_timeout_seconds` | `number` | `180` | SQS visibility timeout — set to at least 6× `lambda_timeout` |
-| `dlq_visibility_timeout_seconds` | `number` | `30` | DLQ visibility timeout |
-| `sqs_message_retention_seconds` | `number` | `345600` | SQS message retention (default: 4 days) |
-| `enable_logging` | `bool` | `true` | Log matched EventBridge events to CloudWatch |
-| `enable_alarms` | `bool` | `true` | Enable CloudWatch alarms (DLQ depth, Lambda errors/throttles) |
-| `alarm_email` | `string` | `null` | SNS alarm destination (required when `enable_alarms = true`) |
-| `dlq_alarm_threshold` | `number` | `1` | DLQ message count that triggers alarm |
-| `lambda_error_threshold` | `number` | `1` | Lambda errors per minute that trigger alarm |
-| `tags` | `map(string)` | `{}` | Tags applied to all resources |
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
+
+## Providers
+
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.63.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+| ---- | ---- |
+| [aws_cloudwatch_event_bus.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_bus) | resource |
+| [aws_cloudwatch_event_rule.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_event_target.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_resource_policy.eventbridge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_resource_policy) | resource |
+| [aws_cloudwatch_metric_alarm.dlq_depth](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.lambda_errors](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_cloudwatch_metric_alarm.lambda_throttles](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_iam_role.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.lambda_sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy_attachment.lambda_basic](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_lambda_event_source_mapping.sqs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_event_source_mapping) | resource |
+| [aws_lambda_function.processor](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_sns_topic.alarms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [aws_sns_topic_subscription.alarm_email](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
+| [aws_sqs_queue.dlq](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [aws_sqs_queue_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_alarm_email"></a> [alarm\_email](#input\_alarm\_email) | Email address for alarm notifications (required if enable\_alarms=true) | `string` | `null` | no |
+| <a name="input_create_event_bus"></a> [create\_event\_bus](#input\_create\_event\_bus) | Create a custom event bus. If false, uses the default event bus. | `bool` | `false` | no |
+| <a name="input_create_lambda"></a> [create\_lambda](#input\_create\_lambda) | Create a Lambda function to process events from SQS | `bool` | `false` | no |
+| <a name="input_dlq_alarm_threshold"></a> [dlq\_alarm\_threshold](#input\_dlq\_alarm\_threshold) | DLQ depth alarm threshold (messages in DLQ) | `number` | `1` | no |
+| <a name="input_dlq_visibility_timeout_seconds"></a> [dlq\_visibility\_timeout\_seconds](#input\_dlq\_visibility\_timeout\_seconds) | DLQ visibility timeout in seconds (DLQ is for holding failed messages, not processing) | `number` | `30` | no |
+| <a name="input_enable_alarms"></a> [enable\_alarms](#input\_enable\_alarms) | Enable CloudWatch alarms for monitoring | `bool` | `true` | no |
+| <a name="input_enable_dlq"></a> [enable\_dlq](#input\_enable\_dlq) | Enable Dead Letter Queue for failed events | `bool` | `true` | no |
+| <a name="input_enable_logging"></a> [enable\_logging](#input\_enable\_logging) | Enable CloudWatch logging for EventBridge events | `bool` | `true` | no |
+| <a name="input_event_pattern"></a> [event\_pattern](#input\_event\_pattern) | EventBridge event pattern as a map/object. See AWS docs for pattern syntax. | `any` | n/a | yes |
+| <a name="input_lambda_batch_size"></a> [lambda\_batch\_size](#input\_lambda\_batch\_size) | Maximum number of records to read from SQS in one batch (1-10000) | `number` | `10` | no |
+| <a name="input_lambda_code"></a> [lambda\_code](#input\_lambda\_code) | Path to Lambda deployment package zip file (required if create\_lambda=true) | `string` | `null` | no |
+| <a name="input_lambda_environment_variables"></a> [lambda\_environment\_variables](#input\_lambda\_environment\_variables) | Environment variables for Lambda function | `map(string)` | `{}` | no |
+| <a name="input_lambda_error_threshold"></a> [lambda\_error\_threshold](#input\_lambda\_error\_threshold) | Lambda error rate alarm threshold (errors per minute) | `number` | `1` | no |
+| <a name="input_lambda_handler"></a> [lambda\_handler](#input\_lambda\_handler) | Lambda function handler (e.g., 'index.handler') | `string` | `"index.handler"` | no |
+| <a name="input_lambda_memory_size"></a> [lambda\_memory\_size](#input\_lambda\_memory\_size) | Lambda memory size in MB | `number` | `128` | no |
+| <a name="input_lambda_runtime"></a> [lambda\_runtime](#input\_lambda\_runtime) | Lambda runtime | `string` | `"nodejs20.x"` | no |
+| <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | Lambda function timeout in seconds (must be less than SQS visibility timeout) | `number` | `30` | no |
+| <a name="input_max_receive_count"></a> [max\_receive\_count](#input\_max\_receive\_count) | Max receives before sending to DLQ (1-1000) | `number` | `3` | no |
+| <a name="input_name"></a> [name](#input\_name) | Resource naming prefix (e.g., 'prod-order-events') | `string` | n/a | yes |
+| <a name="input_sqs_message_retention_seconds"></a> [sqs\_message\_retention\_seconds](#input\_sqs\_message\_retention\_seconds) | SQS message retention period in seconds | `number` | `345600` | no |
+| <a name="input_sqs_visibility_timeout_seconds"></a> [sqs\_visibility\_timeout\_seconds](#input\_sqs\_visibility\_timeout\_seconds) | SQS visibility timeout in seconds (should be 6x Lambda timeout) | `number` | `180` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags applied to all resources | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| `event_bus_name` | EventBridge bus name (`"default"` if no custom bus) |
-| `event_bus_arn` | EventBridge bus ARN |
-| `event_rule_name` | EventBridge rule name |
-| `event_rule_arn` | EventBridge rule ARN |
-| `queue_name` | SQS queue name |
-| `queue_arn` | SQS queue ARN |
-| `queue_url` | SQS queue URL |
-| `dlq_name` | DLQ name (null if disabled) |
-| `dlq_arn` | DLQ ARN (null if disabled) |
-| `dlq_url` | DLQ URL (null if disabled) |
-| `lambda_function_name` | Lambda function name (null if disabled) |
-| `lambda_function_arn` | Lambda function ARN (null if disabled) |
-| `lambda_role_arn` | Lambda IAM role ARN (null if disabled) |
-| `log_group_name` | CloudWatch log group for EventBridge events (null if disabled) |
-| `log_group_arn` | CloudWatch log group ARN (null if disabled) |
-| `alarm_topic_arn` | SNS alarm topic ARN (null if disabled) |
-| `dlq_alarm_name` | DLQ depth alarm name (null if disabled) |
-| `lambda_error_alarm_name` | Lambda error alarm name (null if disabled) |
-
-## What it creates
-
-Per module call:
-- `aws_cloudwatch_event_rule` — event pattern filter
-- `aws_sqs_queue` — main event queue
-- `aws_cloudwatch_event_target` — routes matched events to SQS
-- SQS queue policy — allows EventBridge to enqueue
-
-Conditional:
-- `aws_cloudwatch_event_bus` — custom bus (`create_event_bus = true`)
-- `aws_sqs_queue` DLQ + redrive policy (`enable_dlq = true`)
-- `aws_lambda_function` + IAM role + event source mapping (`create_lambda = true`)
-- `aws_cloudwatch_log_group` — EventBridge event log (`enable_logging = true`)
-- `aws_cloudwatch_metric_alarm` × 3 + `aws_sns_topic` (`enable_alarms = true`)
+| ---- | ----------- |
+| <a name="output_alarm_topic_arn"></a> [alarm\_topic\_arn](#output\_alarm\_topic\_arn) | ARN of the SNS topic for alarms (null if disabled) |
+| <a name="output_dlq_alarm_name"></a> [dlq\_alarm\_name](#output\_dlq\_alarm\_name) | Name of the DLQ depth alarm (null if disabled) |
+| <a name="output_dlq_arn"></a> [dlq\_arn](#output\_dlq\_arn) | ARN of the Dead Letter Queue (null if disabled) |
+| <a name="output_dlq_name"></a> [dlq\_name](#output\_dlq\_name) | Name of the Dead Letter Queue (null if disabled) |
+| <a name="output_dlq_url"></a> [dlq\_url](#output\_dlq\_url) | URL of the Dead Letter Queue (null if disabled) |
+| <a name="output_event_bus_arn"></a> [event\_bus\_arn](#output\_event\_bus\_arn) | ARN of the EventBridge event bus |
+| <a name="output_event_bus_name"></a> [event\_bus\_name](#output\_event\_bus\_name) | Name of the EventBridge event bus (or 'default') |
+| <a name="output_event_rule_arn"></a> [event\_rule\_arn](#output\_event\_rule\_arn) | ARN of the EventBridge rule |
+| <a name="output_event_rule_name"></a> [event\_rule\_name](#output\_event\_rule\_name) | Name of the EventBridge rule |
+| <a name="output_lambda_error_alarm_name"></a> [lambda\_error\_alarm\_name](#output\_lambda\_error\_alarm\_name) | Name of the Lambda error alarm (null if disabled) |
+| <a name="output_lambda_function_arn"></a> [lambda\_function\_arn](#output\_lambda\_function\_arn) | ARN of the Lambda function (null if disabled) |
+| <a name="output_lambda_function_name"></a> [lambda\_function\_name](#output\_lambda\_function\_name) | Name of the Lambda function (null if disabled) |
+| <a name="output_lambda_role_arn"></a> [lambda\_role\_arn](#output\_lambda\_role\_arn) | ARN of the Lambda IAM role (null if disabled) |
+| <a name="output_log_group_arn"></a> [log\_group\_arn](#output\_log\_group\_arn) | CloudWatch log group ARN for EventBridge events (null if logging disabled) |
+| <a name="output_log_group_name"></a> [log\_group\_name](#output\_log\_group\_name) | CloudWatch log group for EventBridge events (null if logging disabled) |
+| <a name="output_queue_arn"></a> [queue\_arn](#output\_queue\_arn) | ARN of the main SQS queue |
+| <a name="output_queue_name"></a> [queue\_name](#output\_queue\_name) | Name of the main SQS queue |
+| <a name="output_queue_url"></a> [queue\_url](#output\_queue\_url) | URL of the main SQS queue |
+<!-- END_TF_DOCS -->
 
 ## Design decisions
 
@@ -207,13 +237,6 @@ Conditional:
 
 - [`examples/basic`](examples/basic/) — EventBridge → SQS only
 - [`examples/complete`](examples/complete/) — full pipeline with Lambda and alarms
-
-## Requirements
-
-| Tool | Version |
-|------|---------|
-| Terraform | `>= 1.9.0` |
-| AWS provider | `~> 5.0` |
 
 ## License
 
