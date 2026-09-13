@@ -13,4 +13,4 @@ jobs:
   readme:
     uses: pomo-studio/.github/.github/workflows/readme-quality.yml@main
     with:
-      strict: false
+      strict: true
