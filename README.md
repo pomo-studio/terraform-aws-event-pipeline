@@ -10,18 +10,19 @@
 This module is deprecated and maintained for existing consumers only.
 
 For new implementations, use:
+
 - `pomo-studio/event-bus/aws` for shared EventBridge bus infrastructure
 - `pomo-studio/event-consumer/aws` for per-service EventBridge -> SQS -> optional Lambda consumers
 
 See [Migration](#migration) for a direct replacement example.
 
-Terraform module for AWS event-driven pipelines — EventBridge → SQS → Lambda with optional DLQ, alarms, and CloudWatch logging.
+Terraform module for AWS event-driven pipelines: EventBridge → SQS → Lambda with optional DLQ, alarms, and CloudWatch logging.
 
-- Full EventBridge → SQS → Lambda wiring in one module call — no queue policies or IAM to wire manually
-- DLQ and retry logic on by default — failed events are preserved, never silently dropped
+- Full EventBridge → SQS → Lambda wiring in one module call: no queue policies or IAM to wire manually
+- DLQ and retry logic on by default: failed events are preserved, never silently dropped
 - CloudWatch alarms for DLQ depth, Lambda errors, and throttles included out of the box
 - Least-privilege Lambda IAM role auto-generated and scoped to its own queue only
-- Caller owns producers and business logic — module handles all the event routing plumbing
+- Caller owns producers and business logic: module handles all the event routing plumbing
 
 **Registry**: `pomo-studio/event-pipeline/aws`
 
@@ -126,6 +127,28 @@ module "consumer" {
 }
 ```
 
+## Design decisions
+
+**EventBridge → SQS over direct invocation**: decouples event producer from processor; SQS absorbs bursts and provides retry semantics independently of Lambda.
+
+**DLQ on by default**: failed events are preserved rather than silently dropped. Drain strategy (reprocess, alert, discard) is the caller's responsibility.
+
+**Alarms on by default**: DLQ depth ≥ 1 and Lambda errors ≥ 1 are treated as incidents. Both thresholds are configurable.
+
+**`lambda_timeout` < `sqs_visibility_timeout_seconds` enforced**: validated at plan time to prevent duplicate processing from visibility timeout expiry during execution.
+
+**Caller owns producers and IAM for them**: `events:PutEvents` permission on the bus is not managed here; the calling module grants it to whatever publishes events.
+
+## Examples
+
+- [`examples/basic`](examples/basic/): EventBridge → SQS only
+- [`examples/complete`](examples/complete/): full pipeline with Lambda and alarms
+
+## Reference
+
+<details>
+<summary>Reference</summary>
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -221,22 +244,7 @@ No modules.
 | <a name="output_queue_url"></a> [queue\_url](#output\_queue\_url) | URL of the main SQS queue |
 <!-- END_TF_DOCS -->
 
-## Design decisions
-
-**EventBridge → SQS over direct invocation** — decouples event producer from processor; SQS absorbs bursts and provides retry semantics independently of Lambda.
-
-**DLQ on by default** — failed events are preserved rather than silently dropped. Drain strategy (reprocess, alert, discard) is the caller's responsibility.
-
-**Alarms on by default** — DLQ depth ≥ 1 and Lambda errors ≥ 1 are treated as incidents. Both thresholds are configurable.
-
-**`lambda_timeout` < `sqs_visibility_timeout_seconds` enforced** — validated at plan time to prevent duplicate processing from visibility timeout expiry during execution.
-
-**Caller owns producers and IAM for them** — `events:PutEvents` permission on the bus is not managed here; the calling module grants it to whatever publishes events.
-
-## Examples
-
-- [`examples/basic`](examples/basic/) — EventBridge → SQS only
-- [`examples/complete`](examples/complete/) — full pipeline with Lambda and alarms
+</details>
 
 ## License
 
