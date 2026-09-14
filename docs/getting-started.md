@@ -5,6 +5,7 @@ This guide walks you through using the Event Pipeline module for the first time.
 ## What This Module Does (In Plain English)
 
 You have an application. Something happens (user signs up, order placed, etc.). You want to:
+
 1. **React to that event** (send email, update database, notify another service)
 2. **Not slow down your app** (do it asynchronously)
 3. **Not lose events** (if your code crashes, retry)
@@ -23,6 +24,7 @@ Your App ──► EventBridge ──► SQS Queue ──► Lambda ──► Yo
 ```
 
 **Why this combination?**
+
 - **EventBridge**: Routes events based on patterns (like a smart router)
 - **SQS**: Buffers events durably (survives crashes, handles spikes)
 - **Lambda**: Scales to zero, scales up automatically
@@ -54,6 +56,7 @@ What event do you want to react to? Examples:
 Your Lambda receives events from SQS. Here's a minimal example:
 
 **`index.js`**:
+
 ```javascript
 exports.handler = async (event) => {
   console.log('Received events:', JSON.stringify(event, null, 2));
@@ -81,6 +84,7 @@ async function sendWelcomeEmail(email) {
 ```
 
 **Package it**:
+
 ```bash
 zip function.zip index.js
 ```
@@ -88,6 +92,7 @@ zip function.zip index.js
 ### Step 3: Deploy the Pipeline
 
 **`main.tf`**:
+
 ```hcl
 module "welcome_emails" {
   source  = "pomo-studio/event-pipeline/aws"
@@ -117,6 +122,7 @@ module "welcome_emails" {
 ```
 
 **Deploy**:
+
 ```bash
 terraform init
 terraform apply
@@ -137,6 +143,7 @@ aws events put-events --entries '[{
 ### Step 5: Verify It Worked
 
 **Check logs**:
+
 ```bash
 # See the event in EventBridge logs
 aws logs tail /aws/events/prod-welcome-emails --since 5m
@@ -146,6 +153,7 @@ aws logs tail /aws/lambda/prod-welcome-emails-processor --since 5m
 ```
 
 **Check SQS queue depth**:
+
 ```bash
 aws sqs get-queue-attributes \
   --queue-url $(terraform output -raw queue_url) \
@@ -182,6 +190,7 @@ When your Lambda receives an event from SQS, the structure is:
 ```
 
 **Key fields**:
+
 - `body.source`: Who sent the event
 - `body.detail-type`: What kind of event
 - `body.detail`: Your custom data
@@ -217,12 +226,14 @@ event_pattern = {
 ### Handling Failures
 
 If your Lambda throws an error:
+
 1. Message returns to queue (visibility timeout expires)
 2. Lambda retries (up to `max_receive_count` times, default 3)
 3. After all retries fail → message goes to DLQ
 4. You get an email alert (if `enable_alarms = true`)
 
 **To reprocess DLQ messages**:
+
 ```bash
 # Move messages from DLQ back to main queue
 aws sqs start-message-move-task \
@@ -246,16 +257,19 @@ Watch these CloudWatch metrics:
 ## Troubleshooting
 
 **"Events aren't reaching my Lambda"**
+
 1. Check EventBridge logs: `aws logs tail /aws/events/<name>`
 2. Verify event pattern matches what you're sending
 3. Check SQS queue has messages: `aws sqs get-queue-attributes`
 
 **"Lambda is failing but no DLQ alert"**
+
 1. Check `enable_dlq = true` and `enable_alarms = true`
 2. Verify `alarm_email` is set
 3. Check SNS subscription is confirmed (check your email)
 
 **"Events are in DLQ but I don't know why"**
+
 1. Check Lambda logs: `aws logs tail /aws/lambda/<name>-processor`
 2. Look for error messages or timeouts
 3. Ensure Lambda timeout < SQS visibility timeout

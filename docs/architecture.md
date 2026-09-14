@@ -71,6 +71,7 @@ This module implements the **"Event Router + Queue + Consumer"** pattern, which 
 **Purpose**: Decouple event producers from consumers
 
 **Key capabilities**:
+
 - Pattern matching (route based on event content)
 - Multiple targets from single rule
 - Schema validation
@@ -83,6 +84,7 @@ This module implements the **"Event Router + Queue + Consumer"** pattern, which 
 **Purpose**: Buffer and durably store events
 
 **Key capabilities**:
+
 - Durability (events survive crashes)
 - Decoupling (consumer can be down)
 - Batching (process multiple events efficiently)
@@ -105,6 +107,7 @@ This module implements the **"Event Router + Queue + Consumer"** pattern, which 
 **Purpose**: Event processing logic
 
 **Key capabilities**:
+
 - Auto-scaling (from 0 to thousands of concurrent executions)
 - Pay-per-use (only pay when processing)
 - Built-in retry and DLQ integration
@@ -118,12 +121,14 @@ This module implements the **"Event Router + Queue + Consumer"** pattern, which 
 EventBridge can invoke Lambda directly. Why add SQS?
 
 **Direct Lambda invocation**:
+
 - Event triggers Lambda immediately
 - If Lambda fails, EventBridge retries (24 hours, exponential backoff)
 - No built-in DLQ
 - No batching
 
 **SQS in the middle**:
+
 - Event buffered in queue
 - Lambda polls at its own pace
 - Built-in DLQ with configurable retry count
@@ -140,6 +145,7 @@ EventBridge can invoke Lambda directly. Why add SQS?
 After `max_receive_count` failed processing attempts, messages go to DLQ.
 
 **Why this matters**:
+
 - Poison messages don't block the queue
 - You can inspect and reprocess failed events
 - Alerts tell you when manual intervention needed
@@ -151,6 +157,7 @@ After `max_receive_count` failed processing attempts, messages go to DLQ.
 SQS visibility timeout determines how long a message is invisible to other consumers after being received.
 
 **If Lambda timeout (30s) > Visibility timeout (30s)**:
+
 - Lambda still processing
 - Message becomes visible again
 - Another Lambda picks it up
@@ -165,6 +172,7 @@ SQS visibility timeout determines how long a message is invisible to other consu
 Every matched event is logged to CloudWatch.
 
 **Why**: Debugging event patterns. Without logs, you can't tell:
+
 - Did my event reach EventBridge?
 - Did the pattern match?
 - What did the event look like?
@@ -213,6 +221,7 @@ Approximate costs per 1M events:
 | **Total** | **~$4/M events** |
 
 **Cost optimization tips**:
+
 - Use batching (process multiple events per Lambda invocation)
 - Adjust log retention (default: 14 days)
 - Consider SQS FIFO only if you need ordering
@@ -244,6 +253,7 @@ Implemented in this module:
 ### Dashboard Queries
 
 CloudWatch Insights query for event latency:
+
 ```sql
 fields @timestamp, @message
 | filter @message like /Processing/
@@ -253,30 +263,37 @@ fields @timestamp, @message
 ## Real-World Case Studies
 
 ### Netflix
+
 Uses EventBridge + SQS for video encoding pipeline. Events trigger when uploads complete, SQS buffers during encoding spikes.
 
 ### Airbnb
+
 Uses similar pattern for booking confirmation emails. EventBridge routes by booking type, SQS ensures no emails lost during traffic spikes.
 
 ### AWS's Own Services
+
 Many AWS services use this pattern internally. It's the backbone of serverless event processing.
 
 ## Further Reading
 
 ### AWS Documentation
+
 - [EventBridge Best Practices](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-best-practices.html)
 - [SQS Best Practices](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-best-practices.html)
 - [Lambda Event Source Mapping](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html)
 
 ### AWS Blog Posts
+
 - [Building event-driven architectures with EventBridge](https://aws.amazon.com/blogs/compute/building-event-driven-architectures-with-amazon-eventbridge/)
 - [Serverless event-driven architecture with EventBridge](https://aws.amazon.com/blogs/compute/serverless-event-driven-architecture-with-amazon-eventbridge/)
 - [Understanding the Different Ways to Invoke Lambda Functions](https://aws.amazon.com/blogs/architecture/understanding-the-different-ways-to-invoke-lambda-functions/)
 
 ### AWS Whitepapers
+
 - [Serverless Event-Driven Architectures](https://docs.aws.amazon.com/whitepapers/latest/serverless-event-driven-architectures/introduction.html)
 - [Event-Driven Architecture on AWS](https://docs.aws.amazon.com/prescriptive-guidance/latest/modernization-event-driven-architecture/introduction.html)
 
 ### Reference Architectures
+
 - [AWS Serverless Application Repository Patterns](https://serverlessland.com/patterns)
 - [EventBridge Scheduler Patterns](https://serverlessland.com/patterns/eventbridge-sqs)
