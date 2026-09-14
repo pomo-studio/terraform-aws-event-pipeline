@@ -17,13 +17,13 @@ This module wires together AWS services to do exactly that.
 
 This is a well-established AWS pattern for event-driven architectures:
 
-```
+```text
 Your App ──► EventBridge ──► SQS Queue ──► Lambda ──► Your Business Logic
                 │
                 └──► CloudWatch Logs (for debugging)
 ```
 
-**Why this combination?**
+#### Why this combination?
 
 - **EventBridge**: Routes events based on patterns (like a smart router)
 - **SQS**: Buffers events durably (survives crashes, handles spikes)
@@ -256,19 +256,19 @@ Watch these CloudWatch metrics:
 
 ## Troubleshooting
 
-**"Events aren't reaching my Lambda"**
+#### "Events aren't reaching my Lambda"
 
 1. Check EventBridge logs: `aws logs tail /aws/events/<name>`
 2. Verify event pattern matches what you're sending
 3. Check SQS queue has messages: `aws sqs get-queue-attributes`
 
-**"Lambda is failing but no DLQ alert"**
+#### "Lambda is failing but no DLQ alert"
 
 1. Check `enable_dlq = true` and `enable_alarms = true`
 2. Verify `alarm_email` is set
 3. Check SNS subscription is confirmed (check your email)
 
-**"Events are in DLQ but I don't know why"**
+#### "Events are in DLQ but I don't know why"
 
 1. Check Lambda logs: `aws logs tail /aws/lambda/<name>-processor`
 2. Look for error messages or timeouts

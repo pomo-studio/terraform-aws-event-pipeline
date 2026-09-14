@@ -7,7 +7,7 @@ This document explains the architectural pattern implemented by this module, inc
 Before diving into the architecture, it helps to understand exactly what this
 module owns versus what you own.
 
-```
+```text
 Your code / AWS service
         │
         │  events:PutEvents  (YOUR code, YOUR IAM)
@@ -51,7 +51,7 @@ Lambda actually does with the event).
 
 This module implements the **"Event Router + Queue + Consumer"** pattern, which is AWS's recommended approach for reliable event processing.
 
-```
+```text
 ┌─────────────┐     ┌──────────────┐     ┌───────────┐     ┌──────────┐
 │   Source    │────►│  EventBridge │────►│    SQS    │────►│  Lambda  │
 │  (Your App) │     │   (Router)   │     │  (Queue)  │     │(Consumer)│
@@ -90,7 +90,7 @@ This module implements the **"Event Router + Queue + Consumer"** pattern, which 
 - Batching (process multiple events efficiently)
 - Backpressure (queue depth indicates load)
 
-**Why SQS over direct Lambda invocation?**
+#### Why SQS over direct Lambda invocation?
 
 | Feature | Direct Lambda | SQS + Lambda |
 |---------|---------------|--------------|
@@ -183,7 +183,7 @@ Every matched event is logged to CloudWatch.
 
 ### Pattern: SNS Instead of SQS
 
-```
+```text
 EventBridge → SNS → Multiple Lambdas (fan-out)
 ```
 
@@ -192,7 +192,7 @@ EventBridge → SNS → Multiple Lambdas (fan-out)
 
 ### Pattern: Kinesis Instead of SQS
 
-```
+```text
 EventBridge → Kinesis → Lambda (stream processing)
 ```
 
@@ -201,7 +201,7 @@ EventBridge → Kinesis → Lambda (stream processing)
 
 ### Pattern: Step Functions Instead of Lambda
 
-```
+```text
 EventBridge → SQS → Step Functions (orchestration)
 ```
 
