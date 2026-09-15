@@ -249,3 +249,6 @@ No modules.
 ## License
 
 MIT
+
+Part of [postmodern.tf](https://pomo.dev), the open-source AWS infrastructure
+collection created by [André Pitanga](https://pomo.studio).
