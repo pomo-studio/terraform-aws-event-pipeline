@@ -6,3 +6,8 @@ output:
     <!-- BEGIN_TF_DOCS -->
     {{ .Content }}
     <!-- END_TF_DOCS -->
+
+# Show the version constraints module users get, not the CI lock file, so
+# Dependabot lock bumps never change the README.
+settings:
+  lockfile: false
